@@ -241,11 +241,7 @@ KnightTree *insertAVL(KnightTree *pKnight, int key, int level)
 	if (pKnight == NULL)
 	{
 		KnightTree *pNew = new KnightTree;
-		pNew->key = key;
-		pNew->level = level;
-		pNew->balance = 1;
-		pNew->pLeftChild = NULL;
-		pNew->pRightChild = NULL;
+		pNew = initNode(key, level);
 		return pNew;
 	}
 	if (key < pKnight->key)
@@ -340,11 +336,7 @@ KnightTree *siege(eventList *pEvent, ringsignList *pSarumanList)
 				int ListKnight[1000], ListCount = 0;
 				NLR(pTree, ListKnight, ListCount);
 				KnightTree *pNew = new KnightTree;
-				pNew->balance = 0;
-				pNew->key = key;
-				pNew->level = level;
-				pNew->pLeftChild = NULL;
-				pNew->pRightChild = NULL;
+				pNew = initNode(key, level);
 				pTree = pNew;
 				for (int i = 0; i < ListCount; i++)
 					insertBST(pTree, ListKnight[i] / 10, ListKnight[i] % 10);
@@ -359,11 +351,7 @@ KnightTree *siege(eventList *pEvent, ringsignList *pSarumanList)
 				sort(ListKnight, ListCount);
 				int midPos = (ListCount - 1) / 2;
 				KnightTree *pNew = new KnightTree;
-				pNew->key = ListKnight[midPos] / 10;
-				pNew->level = ListKnight[midPos] % 10;
-				pNew->balance = 0;
-				pNew->pLeftChild = NULL;
-				pNew->pRightChild = NULL;
+				pNew = initNode(ListKnight[midPos] / 10, ListKnight[midPos] % 10);
 				pTree = pNew;
 				for (int i = 0; i < midPos; i++)
 				{
@@ -388,11 +376,7 @@ KnightTree *siege(eventList *pEvent, ringsignList *pSarumanList)
 				if (key == 999 && isIncrease)
 					break;
 				KnightTree *pNew = new KnightTree;
-				pNew->balance = 0;
-				pNew->key = key;
-				pNew->level = level;
-				pNew->pLeftChild = NULL;
-				pNew->pRightChild = NULL;
+				pNew = initNode(key, level);
 				//cout << "run";
 				if (isGandalf)
 				{
@@ -444,7 +428,8 @@ KnightTree *siege(eventList *pEvent, ringsignList *pSarumanList)
 				else
 					pWalk = pWalk->pLeftChild;
 			}
-			p->level = p->level + 1;
+			if (p->level < 9)
+				p->level = p->level + 1;
 		}
 		//-XYZL
 		if (pEvent->nEventCode < 0)

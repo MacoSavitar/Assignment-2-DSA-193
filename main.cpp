@@ -66,6 +66,8 @@ void display(KnightTree *pTree, int n)
 	{
 		if (pTree->key == 0)
 			cout << "000_" << pTree->level;
+		else if (pTree->key < 10)
+			cout << "00" << pTree->key << "_" << pTree->level;
 		else if (pTree->key < 100)
 			cout << "0" << pTree->key << "_" << pTree->level;
 		else

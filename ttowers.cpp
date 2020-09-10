@@ -268,6 +268,61 @@ KnightTree *insertAVL(KnightTree *pKnight, int key, int level)
 	}
 	return pKnight;
 }
+KnightTree *deleteAVL(KnightTree *pKnight, int key)
+{
+	if (pKnight == NULL)
+		return pKnight;
+	if (pKnight == NULL)
+		return pKnight;
+	if (key < pKnight->key)
+		pKnight->pLeftChild = deleteAVL(pKnight->pLeftChild, key);
+	else if (key > pKnight->key)
+		pKnight->pRightChild = deleteAVL(pKnight->pRightChild, key);
+	else
+	{
+		if (pKnight->pLeftChild == NULL || pKnight->pRightChild == NULL)
+		{
+			KnightTree *temp = pKnight->pLeftChild ? pKnight->pLeftChild : pKnight->pRightChild;
+			if (temp == NULL)
+			{
+				temp = pKnight;
+				pKnight = NULL;
+			}
+			else
+
+				pKnight = temp;
+			delete temp;
+		}
+		else
+		{
+			KnightTree *pWalk = pKnight->pRightChild;
+			while (pWalk->pLeftChild)
+				pWalk = pWalk->pLeftChild;
+			pKnight->key = pWalk->key;
+			pKnight->level = pWalk->level;
+			pKnight->pRightChild = deleteAVL(pKnight->pRightChild, pWalk->key);
+		}
+	}
+	if (pKnight == NULL)
+		return pKnight;
+	pKnight->balance = getBalance(pKnight);
+	int balance = pKnight->balance;
+	if (balance > 1 && getBalance(pKnight->pLeftChild) >= 0)
+		return rotateRight(pKnight);
+	if (balance > 1 && getBalance(pKnight->pLeftChild) < 0)
+	{
+		pKnight->pLeftChild = rotateLeft(pKnight->pLeftChild);
+		return rotateRight(pKnight);
+	}
+	if (balance < -1 && getBalance(pKnight->pRightChild) <= 0)
+		return rotateLeft(pKnight);
+	if (balance < -1 && getBalance(pKnight->pRightChild) > 0)
+	{
+		pKnight->pRightChild = rotateRight(pKnight->pRightChild);
+		return rotateLeft(pKnight);
+	}
+	return pKnight;
+}
 void swap(int &a, int &b)
 {
 	int temp = a;
@@ -312,10 +367,16 @@ KnightTree *siege(eventList *pEvent, ringsignList *pSarumanList)
 	//let's save the lady
 	bool isAragon = false, isLegolas = false, isGandalf = false, isGimli = false;
 	bool isLurtz = false, isSaruman = false;
-	bool haveNarsil = false, SarumanDefeat = false, isAVL = false;
+	bool haveNarsil, SarumanDefeat = false, isAVL = false, isBST = false, isRareKnight;
 	int count = 0;
 	while (pEvent)
 	{
+		isRareKnight = false;
+		if (pTree != NULL)
+			if (pTree->key == 777)
+				haveNarsil = true;
+			else
+				haveNarsil = false;
 		cout << "Run while: " << ++count << "\n";
 		//1XYZL
 		if (pEvent->nEventCode / 10000 == 1)
@@ -324,15 +385,33 @@ KnightTree *siege(eventList *pEvent, ringsignList *pSarumanList)
 			int level;
 			get(pEvent, key, level);
 			if (key == 777)
-				isAragon = true;
-			if (key == 888)
-				isLegolas = true;
-			if (key == 999)
-				isGandalf = true;
-			if (key == 0)
-				isGimli = true;
-			if (isAragon)
 			{
+				isAragon = true;
+				isLegolas = false;
+				isGandalf = false;
+				isRareKnight = true;
+			}
+			if (key == 888)
+			{
+				isAragon = false;
+				isLegolas = true;
+				isGandalf = false;
+				isRareKnight = true;
+			}
+			if (key == 999)
+			{
+				isAragon = false;
+				isLegolas = false;
+				isGandalf = true;
+				isRareKnight = true;
+			}
+			if (key == 000)
+			{
+				isGimli = true;
+			}
+			if (isAragon && isRareKnight)
+			{
+				cout << "Aragon is Leader\n";
 				int ListKnight[1000], ListCount = 0;
 				NLR(pTree, ListKnight, ListCount);
 				KnightTree *pNew = new KnightTree;
@@ -340,10 +419,15 @@ KnightTree *siege(eventList *pEvent, ringsignList *pSarumanList)
 				pTree = pNew;
 				for (int i = 0; i < ListCount; i++)
 					insertBST(pTree, ListKnight[i] / 10, ListKnight[i] % 10);
-				isAragon = false;
+				isBST = true;
+				isAVL = false;
+				//
+				displayTree(pTree, 0);
+				cout << "\n";
 			}
-			else if (isLegolas)
+			if (isLegolas && isRareKnight)
 			{
+				cout << "Legolas is Leader\n";
 				int ListKnight[1000], ListCount = 0;
 				LNR(pTree, ListKnight, ListCount);
 				ListKnight[ListCount] = key * 10 + level;
@@ -361,9 +445,27 @@ KnightTree *siege(eventList *pEvent, ringsignList *pSarumanList)
 				{
 					insertBST(pTree, ListKnight[i] / 10, ListKnight[i] % 10);
 				}
-				isLegolas = false;
+				//
+				displayTree(pTree, 0);
+				cout << "\n";
 			}
-			else
+			if (isGandalf && isRareKnight)
+			{
+				cout << "Gandalf is Leader\n";
+				int ListKnight[1000], ListCount = 0;
+				RNL(pTree, ListKnight, ListCount);
+				KnightTree *pNew = new KnightTree;
+				pNew = initNode(key, level);
+				pTree = pNew;
+				for (int i = 0; i < ListCount; i++)
+					pTree = insertAVL(pTree, ListKnight[i] / 10, ListKnight[i] % 10);
+				isAVL = true;
+				isBST = false;
+				//
+				displayTree(pTree, 0);
+				cout << "\n";
+			}
+			if (!isRareKnight)
 			{
 				bool isIncrease = false;
 				while (isExistNode(pTree, key))
@@ -373,44 +475,27 @@ KnightTree *siege(eventList *pEvent, ringsignList *pSarumanList)
 					if (key == 777 || key == 888)
 						key++;
 				}
-				if (key == 999 && isIncrease)
-					break;
-				KnightTree *pNew = new KnightTree;
-				pNew = initNode(key, level);
-				//cout << "run";
-				if (isGandalf)
+				if (!(key == 999 && isIncrease))
 				{
-					isAVL = true;
-					KnightTree *pWalk = pTree;
-					int ListKnight[1000], ListCount = 0;
-					RNL(pTree, ListKnight, ListCount);
-					//KnightTree *pNew = new KnightTree;
-					//delete pTree;
-					//KnightTree *pTree=NULL;
-					pTree = pNew;
-					for (int i = 0; i < ListCount; i++)
+					KnightTree *pNew = new KnightTree;
+					pNew = initNode(key, level);
+
+					if (isGimli && isCompleteTree(pTree))
 					{
-						//cout << ListKnight[i] << " ";
-						pTree = insertAVL(pTree, ListKnight[i] / 10, ListKnight[i] % 10);
+						isGimli = false;
+						break;
 					}
-					//cout << "\n";
-				}
-				else if (isGimli && isCompleteTree(pTree))
-					break;
-				else if (pTree == NULL)
-				{
-					pTree = pNew;
-				}
-				else
-				{
-					if (isAVL)
-						insertAVL(pTree, pNew->key, pNew->level);
+					if (pTree == NULL)
+						pTree = pNew;
 					else
-						insertBST(pTree, pNew->key, pNew->level);
+					{
+						if (isAVL)
+							insertAVL(pTree, pNew->key, pNew->level);
+						else
+							insertBST(pTree, pNew->key, pNew->level);
+					}
 				}
 			}
-			if (pTree->key == 777)
-				haveNarsil = true;
 		}
 		//2XYZ
 		if (pEvent->nEventCode / 1000 == 2)
@@ -436,48 +521,20 @@ KnightTree *siege(eventList *pEvent, ringsignList *pSarumanList)
 		{
 			int monsterKey, monsterLevel;
 			get(pEvent, monsterKey, monsterLevel);
-			if (isAragon && haveNarsil && monsterLevel == pTree->level)
-				haveNarsil = false;
-			else
+			if (!(monsterLevel == pTree->level && isAragon && haveNarsil))
 			{
-				//cout << "Monster key: " << monsterKey << endl;
 				if (monsterKey == 777)
 				{
 					isLurtz = true;
-					//cout << getLeaf(pTree) << endl;
 					if (monsterLevel == getLeaf(pTree))
 					{
 						while (monsterLevel <= getHeight(pTree))
 							deleteLeaf(pTree);
 					}
 				}
-				else
+				else if (monsterKey == 888)
 				{
-					if (monsterKey == 888)
-						isSaruman = true;
-					if (isSaruman)
-					{
-						while (pTree && !SarumanDefeat)
-						{
-							KnightTree *pWalk = pTree, *p = pTree;
-							int minDistance = abs(pTree->key - monsterKey);
-							while (pWalk)
-							{
-								//cout<<"run";
-								if (abs(pWalk->key - monsterKey) < minDistance)
-									p = pWalk;
-								if (pWalk->key < monsterKey)
-									pWalk = pWalk->pRightChild;
-								else
-									pWalk = pWalk->pLeftChild;
-							}
-							if (p->level < monsterLevel)
-								deleteNodeBST(pTree, p);
-							else
-								SarumanDefeat = true;
-						}
-					}
-					else
+					while (pTree && !SarumanDefeat)
 					{
 						KnightTree *pWalk = pTree, *p = pTree;
 						int minDistance = abs(pTree->key - monsterKey);
@@ -492,15 +549,40 @@ KnightTree *siege(eventList *pEvent, ringsignList *pSarumanList)
 								pWalk = pWalk->pLeftChild;
 						}
 						if (p->level < monsterLevel)
+							if (isAVL)
+								deleteAVL(pTree, p->key);
+							else
+								deleteNodeBST(pTree, p);
+						else
+							SarumanDefeat = true;
+					}
+				}
+				else
+				{
+					KnightTree *pWalk = pTree, *p = pTree;
+					int minDistance = abs(pTree->key - monsterKey);
+					while (pWalk)
+					{
+						//cout<<"run";
+						if (abs(pWalk->key - monsterKey) < minDistance)
+							p = pWalk;
+						if (pWalk->key < monsterKey)
+							pWalk = pWalk->pRightChild;
+						else
+							pWalk = pWalk->pLeftChild;
+					}
+					if (p->level < monsterLevel)
+					{
+						cout << "lose\n";
+						if (isGandalf)
 						{
-							cout << "lose\n";
-							if (isGandalf)
-							{
-								isGandalf = false;
-								isAVL = false;
-							}
-							deleteNodeBST(pTree, p);
+							isGandalf = false;
+							isAVL = false;
 						}
+						if (isAVL)
+							deleteAVL(pTree, p->key);
+						else
+							deleteNodeBST(pTree, p);
 					}
 				}
 			}
@@ -526,6 +608,10 @@ KnightTree *siege(eventList *pEvent, ringsignList *pSarumanList)
 			break;
 		// displayTree(pTree, 0);
 		// cout << "\n";
+		if (isAVL)
+			cout << "Is AVL tree\n";
+		else
+			cout << "Is BST tree\n";
 		pEvent = pEvent->pNext;
 	}
 	return pTree;

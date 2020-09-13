@@ -6,26 +6,69 @@
 //your code should be after that directive
 //Get key and level
 //////////////////
-void displayTree(KnightTree *pTree, int n)
+struct Trunk
+{
+	Trunk *prev;
+	string str;
+	Trunk(Trunk *prev, string str)
+	{
+		this->prev = prev;
+		this->str = str;
+	}
+};
+void showTrunks(Trunk *p)
+{
+	if (p == NULL)
+		return;
+	showTrunks(p->prev);
+	cout << p->str;
+}
+void displayTree(KnightTree *pTree, Trunk *prev, bool isLeft)
 {
 	if (pTree == NULL)
-		cout << "NULL ";
+		return;
+	string prev_str = "	";
+	Trunk *trunk = new Trunk(prev, prev_str);
+	displayTree(pTree->pLeftChild, trunk, true);
+	if (!prev)
+		trunk->str = "---";
+	else if (isLeft)
+	{
+		trunk->str = ".---";
+		prev_str = "	|";
+	}
 	else
 	{
-		if (pTree->key == 0)
-			cout << "000_" << pTree->level;
-		else if (pTree->key < 10)
-			cout << "00" << pTree->key << "_" << pTree->level;
-		else if (pTree->key < 100)
-			cout << "0" << pTree->key << "_" << pTree->level;
-		else
-			cout << pTree->key << "_" << pTree->level;
-		cout << "(";
-		displayTree(pTree->pLeftChild, ++n);
-		displayTree(pTree->pRightChild, ++n);
-		cout << ")";
+		trunk->str = "`---";
+		prev->str = prev_str;
 	}
+	showTrunks(trunk);
+	cout << pTree->key << "_" << pTree->level << endl;
+	if (prev)
+		prev->str = prev_str;
+	trunk->str = "	|";
+	displayTree(pTree->pRightChild, trunk, false);
 }
+// void displayTree(KnightTree *pTree, int n)
+// {
+// 	if (pTree == NULL)
+// 		cout << "NULL ";
+// 	else
+// 	{
+// 		if (pTree->key == 0)
+// 			cout << "000_" << pTree->level;
+// 		else if (pTree->key < 10)
+// 			cout << "00" << pTree->key << "_" << pTree->level;
+// 		else if (pTree->key < 100)
+// 			cout << "0" << pTree->key << "_" << pTree->level;
+// 		else
+// 			cout << pTree->key << "_" << pTree->level;
+// 		cout << "(";
+// 		displayTree(pTree->pLeftChild, ++n);
+// 		displayTree(pTree->pRightChild, ++n);
+// 		cout << ")";
+// 	}
+// }
 /////////////////
 void get(eventList *pEvent, int &key, int &level)
 {
@@ -97,7 +140,7 @@ bool isExistNode(KnightTree *pKnight, int key)
 	}
 	return false;
 }
-
+//Xóa node trong cây BST
 bool deleteNodeBST(KnightTree *&pKnight, KnightTree *pDlt)
 {
 	if (pKnight == NULL)
@@ -136,6 +179,7 @@ bool deleteNodeBST(KnightTree *&pKnight, KnightTree *pDlt)
 		}
 	}
 }
+//Duyệt NLR
 void NLR(KnightTree *pTree, int *ListKnight, int &ListCount)
 {
 	if (pTree)
@@ -145,21 +189,8 @@ void NLR(KnightTree *pTree, int *ListKnight, int &ListCount)
 		NLR(pTree->pLeftChild, ListKnight, ListCount);
 		NLR(pTree->pRightChild, ListKnight, ListCount);
 	}
-	else
-		return;
 }
-void RNL(KnightTree *pTree, int *ListKnight, int &ListCount)
-{
-	if (pTree)
-	{
-		NLR(pTree->pRightChild, ListKnight, ListCount);
-		ListKnight[ListCount] = pTree->key * 10 + pTree->level;
-		ListCount += 1;
-		NLR(pTree->pLeftChild, ListKnight, ListCount);
-	}
-	else
-		return;
-}
+//Duyệt LNR
 void LNR(KnightTree *pTree, int *ListKnight, int &ListCount)
 {
 	if (pTree)
@@ -172,6 +203,18 @@ void LNR(KnightTree *pTree, int *ListKnight, int &ListCount)
 	else
 		return;
 }
+//Duyệt RNL
+void RNL(KnightTree *pTree, int *ListKnight, int &ListCount)
+{
+	if (pTree != NULL)
+	{
+		RNL(pTree->pRightChild, ListKnight, ListCount);
+		ListKnight[ListCount] = pTree->key * 10 + pTree->level;
+		ListCount += 1;
+		RNL(pTree->pLeftChild, ListKnight, ListCount);
+	}
+}
+//Lấy chiều cao của cây
 int getHeight(KnightTree *pKnight)
 {
 	if (pKnight == NULL)
@@ -186,6 +229,7 @@ int getHeight(KnightTree *pKnight)
 			return (rightHeight + 1);
 	}
 }
+//Lấy số lượng node lá
 int getLeaf(KnightTree *pKnight)
 {
 	if (pKnight == NULL)
@@ -195,6 +239,7 @@ int getLeaf(KnightTree *pKnight)
 	else
 		return getLeaf(pKnight->pLeftChild) + getLeaf(pKnight->pRightChild);
 }
+//Xóa node lá
 void deleteLeaf(KnightTree *&pKnight)
 {
 	if (pKnight->pLeftChild == NULL && pKnight->pRightChild == NULL)
@@ -210,6 +255,7 @@ void deleteLeaf(KnightTree *&pKnight)
 	else
 		deleteLeaf(pKnight->pRightChild);
 }
+//Đếm số node của cây
 int numberOfNode(KnightTree *pKnight)
 {
 	if (pKnight == NULL)
@@ -219,6 +265,7 @@ int numberOfNode(KnightTree *pKnight)
 		return numberOfNode(pKnight->pLeftChild) + numberOfNode(pKnight->pRightChild) + 1;
 	}
 }
+//Kiểm tra cây hoàn thiện
 bool isCompleteTree(KnightTree *pKnight)
 {
 
@@ -234,84 +281,96 @@ int max(int a, int b)
 		return a;
 	return b;
 }
+
 int getBalance(KnightTree *pKnight)
 {
-	if (pKnight == NULL)
-		return 0;
-	return getHeight(pKnight->pLeftChild) - getHeight(pKnight->pRightChild);
+	int l = getHeight(pKnight->pLeftChild);
+	int r = getHeight(pKnight->pRightChild);
+	return l - r;
 }
-KnightTree *rotateRight(KnightTree *pKnight)
+KnightTree *rrRotate(KnightTree *pKnight)
 {
 	cout << "Rotate Right\n";
-	KnightTree *T1 = pKnight->pLeftChild;
-	KnightTree *T2 = T1->pRightChild;
-
-	T1->pRightChild = pKnight;
-	pKnight->pLeftChild = T2;
-
-	pKnight->balance = getBalance(pKnight);
-	T1->balance = getBalance(T1);
-	return T1;
+	KnightTree *T1;
+	T1 = pKnight->pRightChild;
+	pKnight->pRightChild = T1->pLeftChild;
+	T1->pLeftChild = pKnight;
+	return (T1);
 }
-KnightTree *rotateLeft(KnightTree *pKnight)
+
+KnightTree *llRotate(KnightTree *pKnight)
 {
 	cout << "Rotate Left\n";
-	KnightTree *T1 = pKnight->pRightChild;
-	KnightTree *T2 = T1->pLeftChild;
-
-	T1->pLeftChild = pKnight;
-	pKnight->pRightChild = T2;
-
-	pKnight->balance = getBalance(pKnight);
-	T1->balance = getBalance(T1);
+	// KnightTree *T1;
+	// T1 = pKnight->pLeftChild;
+	// pKnight->pLeftChild = T1->pRightChild;
+	// T1->pRightChild = pKnight;
+	KnightTree *T1 = pKnight->pLeftChild;
+	KnightTree *T2 = T1->pRightChild;
+	T1->pRightChild = pKnight;
+	pKnight->pLeftChild = T2;
 	return T1;
 }
+
+KnightTree *rlRotate(KnightTree *pKnight)
+{
+	KnightTree *T1;
+	T1 = pKnight->pRightChild;
+	pKnight->pRightChild = llRotate(T1);
+	return (rrRotate(pKnight));
+}
+
+KnightTree *lrRotate(KnightTree *pKnight)
+{
+	KnightTree *T1;
+	T1 = pKnight->pLeftChild;
+	pKnight->pLeftChild = rrRotate(T1);
+	return (llRotate(pKnight));
+}
+
+KnightTree *autoBalance(KnightTree *pKnight)
+{
+	int balance = getBalance(pKnight);
+	if (balance > 1)
+	{
+		if (getBalance(pKnight->pLeftChild) > 0)
+			pKnight = llRotate(pKnight);
+		else
+			pKnight = lrRotate(pKnight);
+	}
+	else if (balance < -1)
+	{
+		if (getBalance(pKnight->pRightChild) > 0)
+			pKnight = rlRotate(pKnight);
+		else
+			pKnight = rrRotate(pKnight);
+	}
+	return pKnight;
+}
+
 KnightTree *insertAVL(KnightTree *pKnight, int key, int level)
 {
 	if (pKnight == NULL)
 	{
-		return (initNode(key, level));
-		cout << "Insert " << key << "to AVL success!\n";
-	}
-	if (key < pKnight->key)
-		pKnight->pLeftChild = insertAVL(pKnight->pLeftChild, key, level);
-	else if (key > pKnight->key)
-		pKnight->pRightChild = insertAVL(pKnight->pRightChild, key, level);
-	else
+		pKnight = initNode(key, level);
+		cout << "Insert " << key << " to AVL success!\n";
 		return pKnight;
-	pKnight->balance = getBalance(pKnight);
-	cout << "Balance of " << pKnight->key << " is: " << pKnight->balance << endl;
-	int balance = pKnight->balance;
-	if (balance > 1 && key < pKnight->pLeftChild->key)
-	{
-		cout << "Left left case --> ";
-		return rotateRight(pKnight);
 	}
-	if (balance < -1 && key > pKnight->pRightChild->key)
+	else if (key < pKnight->key)
 	{
-		cout << "Right right case --> ";
-		return rotateLeft(pKnight);
+		pKnight->pLeftChild = insertAVL(pKnight->pLeftChild, key, level);
+		pKnight = autoBalance(pKnight);
 	}
-	if (balance > 1 && key > pKnight->pLeftChild->key)
+	else if (key > pKnight->key)
 	{
-		cout << "Left right case --> ";
-		pKnight->pLeftChild = rotateLeft(pKnight->pLeftChild);
-		return rotateRight(pKnight);
+		pKnight->pRightChild = insertAVL(pKnight->pRightChild, key, level);
+		pKnight = autoBalance(pKnight);
 	}
-	if (balance < -1 && key < pKnight->pRightChild->key)
-	{
-		cout << "Right left case --> ";
-		pKnight->pRightChild = rotateRight(pKnight->pRightChild);
-		return rotateLeft(pKnight);
-	}
-	cout << pKnight->key << endl;
-	//cout << "Balance of " << pKnight->key << " after insert is: " << pKnight->balance << endl;
 	return pKnight;
 }
+
 KnightTree *deleteAVL(KnightTree *pKnight, int key)
 {
-	if (pKnight == NULL)
-		return pKnight;
 	if (pKnight == NULL)
 		return pKnight;
 	if (key < pKnight->key)
@@ -329,9 +388,7 @@ KnightTree *deleteAVL(KnightTree *pKnight, int key)
 				pKnight = NULL;
 			}
 			else
-
-				pKnight = temp;
-			cout << "Delete " << temp->key << "from AVL success!\n";
+				*pKnight = *temp;
 			delete temp;
 		}
 		else
@@ -346,22 +403,27 @@ KnightTree *deleteAVL(KnightTree *pKnight, int key)
 	}
 	if (pKnight == NULL)
 		return pKnight;
-	pKnight->balance = getBalance(pKnight);
-	int balance = pKnight->balance;
-	if (balance > 1 && getBalance(pKnight->pLeftChild) >= 0)
-		return rotateRight(pKnight);
+	int balance = getBalance(pKnight);
 	if (balance > 1 && getBalance(pKnight->pLeftChild) < 0)
 	{
-		pKnight->pLeftChild = rotateLeft(pKnight->pLeftChild);
-		return rotateRight(pKnight);
+		return llRotate(pKnight);
 	}
-	if (balance < -1 && getBalance(pKnight->pRightChild) <= 0)
-		return rotateLeft(pKnight);
-	if (balance < -1 && getBalance(pKnight->pRightChild) > 0)
+
+	if (balance < -1 && getBalance(pKnight->pLeftChild) <= 0)
 	{
-		pKnight->pRightChild = rotateRight(pKnight->pRightChild);
-		return rotateLeft(pKnight);
+		return rrRotate(pKnight);
 	}
+
+	if (balance > 1 && getBalance(pKnight) < 0)
+	{
+		return lrRotate(pKnight);
+	}
+
+	if (balance < -1 && getBalance(pKnight->pRightChild) <= 0)
+	{
+		return rlRotate(pKnight);
+	}
+	pKnight = autoBalance(pKnight);
 	return pKnight;
 }
 void swap(int &a, int &b)
@@ -436,6 +498,9 @@ KnightTree *siege(eventList *pEvent, ringsignList *pSarumanList)
 				cout << "Aragon is Leader----List is NLR\n";
 				int ListKnight[1000], ListCount = 0;
 				NLR(pTree, ListKnight, ListCount);
+				for (int i = 0; i < ListCount; i++)
+					cout << ListKnight[i] / 10 << " ";
+				cout << endl;
 				KnightTree *pNew = new KnightTree;
 				pNew = initNode(key, level);
 				pTree = pNew;
@@ -444,7 +509,7 @@ KnightTree *siege(eventList *pEvent, ringsignList *pSarumanList)
 				isBST = true;
 				isAVL = false;
 				//
-				displayTree(pTree, 0);
+				displayTree(pTree, NULL, false);
 				cout << "\n";
 			}
 			if (isLegolas && isRareKnight)
@@ -455,6 +520,9 @@ KnightTree *siege(eventList *pEvent, ringsignList *pSarumanList)
 				ListKnight[ListCount] = key * 10 + level;
 				ListCount += 1;
 				sort(ListKnight, ListCount);
+				for (int i = 0; i < ListCount; i++)
+					cout << ListKnight[i] / 10 << " ";
+				cout << endl;
 				// for (int i = 0; i < ListCount; i++)
 				// {
 				// 	cout << ListKnight[i] << " ";
@@ -473,7 +541,7 @@ KnightTree *siege(eventList *pEvent, ringsignList *pSarumanList)
 					insertBST(pTree, ListKnight[i] / 10, ListKnight[i] % 10);
 				}
 				//
-				displayTree(pTree, 0);
+				displayTree(pTree, NULL, false);
 				cout << "\n";
 			}
 			if (isGandalf && isRareKnight)
@@ -491,11 +559,12 @@ KnightTree *siege(eventList *pEvent, ringsignList *pSarumanList)
 				{
 					cout << "Insert " << ListKnight[i] / 10 << " to AVL" << endl;
 					pTree = insertAVL(pTree, ListKnight[i] / 10, ListKnight[i] % 10);
+					cout << endl;
 				}
 				isAVL = true;
 				isBST = false;
 				//
-				displayTree(pTree, 0);
+				displayTree(pTree, NULL, false);
 				cout << "\n";
 			}
 			if (isGimli && isRareKnight)
@@ -577,6 +646,7 @@ KnightTree *siege(eventList *pEvent, ringsignList *pSarumanList)
 			int monsterKey, monsterLevel;
 			get(pEvent, monsterKey, monsterLevel);
 			cout << "Fight with " << monsterKey << endl;
+
 			if (!(monsterLevel == pTree->level && isAragon && haveNarsil))
 			{
 				if (monsterKey == 777)
@@ -584,12 +654,13 @@ KnightTree *siege(eventList *pEvent, ringsignList *pSarumanList)
 					isLurtz = true;
 					if (monsterLevel == getLeaf(pTree))
 					{
-						cout<<"Ngua hiiiii\n";
+						cout << "Horse!\n";
 						while (monsterLevel <= getHeight(pTree))
 							deleteLeaf(pTree);
+						break;
 					}
 				}
-				else if (monsterKey == 888)
+				if (monsterKey == 888)
 				{
 					while (pTree && !SarumanDefeat)
 					{
@@ -622,16 +693,20 @@ KnightTree *siege(eventList *pEvent, ringsignList *pSarumanList)
 					{
 						//cout<<"run";
 						if (abs(pWalk->key - monsterKey) < minDistance)
+						{
 							p = pWalk;
+							minDistance = abs(p->key - monsterKey);
+						}
 						if (pWalk->key < monsterKey)
 							pWalk = pWalk->pRightChild;
 						else
 							pWalk = pWalk->pLeftChild;
 					}
+					cout << p->key << " Fight\n";
 					if (p->level < monsterLevel)
 					{
 						cout << "lose\n";
-						if (isGandalf)
+						if (p->key == 999)
 						{
 							isGandalf = false;
 							isAVL = false;
@@ -663,7 +738,8 @@ KnightTree *siege(eventList *pEvent, ringsignList *pSarumanList)
 		}
 		if (pTree == NULL)
 			break;
-		displayTree(pTree, 0);
+		cout << "Final Tree: \n";
+		displayTree(pTree, NULL, false);
 		cout << "\n";
 		if (isAVL)
 			cout << "Is AVL tree\n";
